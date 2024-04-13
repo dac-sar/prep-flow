@@ -1,8 +1,15 @@
-from typing import Annotated, Any, Generic, Optional, TypeVar, Union, Type
+from typing import Annotated, Any, Generic, Optional, Type, TypeVar, Union
 
 import pandas as pd
 from pandas._libs.tslibs.timestamps import Timestamp  # noqa
-from pydantic import BaseModel, ConfigDict, Field, PlainValidator, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PlainValidator,
+    ValidationInfo,
+    field_validator,
+)
 
 _DType = TypeVar("_DType")
 

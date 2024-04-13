@@ -13,7 +13,6 @@ from prep_flow import (
 )
 
 
-
 def test_validate_necessary_columns():
     data = pd.DataFrame(
         {
@@ -103,14 +102,22 @@ def test_validate_datetime():
 
 def test_validate_regexp():
     data_1 = pd.DataFrame(
-        {"id": ["p_0001", "p_0002"], "name": ["taro", "hanako"], "birthday": ["1995/10/19", "1998/3/25"]}
+        {
+            "id": ["p_0001", "p_0002"],
+            "name": ["taro", "hanako"],
+            "birthday": ["1995/10/19", "1998/3/25"],
+        }
     )
     conditions_1 = {"id": {"regexp": r"p_[0-9]{4}", "nullable": False}}
     Validator.validate_regexp(data_1, conditions_1)
     assert True
 
     data_2 = pd.DataFrame(
-        {"id": ["p_0001", "0002"], "name": ["taro", "hanako"], "birthday": ["1995/10/19", "1998/3/25"]}
+        {
+            "id": ["p_0001", "0002"],
+            "name": ["taro", "hanako"],
+            "birthday": ["1995/10/19", "1998/3/25"],
+        }
     )
     conditions_2 = {"id": {"regexp": r"p_[0-9]{4}", "nullable": False}}
     with pytest.raises(InvalidRegexpFoundError) as e:
@@ -121,7 +128,11 @@ def test_validate_regexp():
     assert e.value.regexp == r"p_[0-9]{4}"
 
     data_3 = pd.DataFrame(
-        {"id": ["p_0001", None], "name": ["taro", "hanako"], "birthday": ["1995/10/19", "1998/3/25"]}
+        {
+            "id": ["p_0001", None],
+            "name": ["taro", "hanako"],
+            "birthday": ["1995/10/19", "1998/3/25"],
+        }
     )
     conditions_3_1 = {"id": {"regexp": r"p_[0-9]{4}", "nullable": False}}
     with pytest.raises(InvalidRegexpFoundError) as e:

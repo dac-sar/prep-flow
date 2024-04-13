@@ -35,7 +35,7 @@ class NecessaryColumnsNotFoundError(DataColumnsError):
 
 class UnnecessaryColumnsExistsError(DataColumnsError):
     def __str__(self) -> str:
-        return f'Unnecessary columns, {self.columns}, exists.'
+        return f"Unnecessary columns, {self.columns}, exists."
 
 
 class DataColumnError(Exception):

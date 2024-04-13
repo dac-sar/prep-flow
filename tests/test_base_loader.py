@@ -6,6 +6,7 @@ from prep_flow import (
     BaseLoader,
     Boolean,
     Column,
+    ColumnCastError,
     DateTime,
     Integer,
     InvalidCategoryFoundError,
@@ -14,15 +15,14 @@ from prep_flow import (
     InvalidRegexpFoundError,
     NecessaryColumnsNotFoundError,
     NullValueFoundError,
-    String,
-    UnnecessaryColumnsExistsError,
-    ColumnCastError,
-    creator,
-    modifier,
-    data_filter,
     ReferenceColumn,
     ReferenceDataNotFoundError,
     ReferenceDataNotInitializationError,
+    String,
+    UnnecessaryColumnsExistsError,
+    creator,
+    data_filter,
+    modifier,
 )
 
 
@@ -59,7 +59,7 @@ def test_parse_date():
         name = Column(dtype=String)
 
     df = pd.DataFrame({"name": ["taro", "hanako"]})
-    xlsx = pd.ExcelFile("test/data/test_parse_data.xlsx")
+    xlsx = pd.ExcelFile("tests/data/test_parse_data.xlsx")
 
     csv_loader = Loader(df)
     xlsx_loader = Loader(xlsx)
@@ -75,7 +75,7 @@ def test_validate_sheet_name():
         name = Column(dtype=String)
 
     answer = pd.DataFrame({"name": ["taro", "hanako"]})
-    xlsx = pd.ExcelFile("test/data/test_validate_sheet_name.xlsx")
+    xlsx = pd.ExcelFile("tests/data/test_validate_sheet_name.xlsx")
     xlsx_loader = Loader(xlsx)
     assert_dataframes(xlsx_loader.data, answer)
 
@@ -91,11 +91,21 @@ def test_definitions():
 
 def test_columns():
     class Loader(BaseLoader):
-        id = Column(dtype=String, regexp=r"id_[0-9]{5}", nullable=True, original_regexp=r"[0-9]{5}")
+        id = Column(
+            dtype=String,
+            regexp=r"id_[0-9]{5}",
+            nullable=True,
+            original_regexp=r"[0-9]{5}",
+        )
         name = Column(dtype=String, name="氏名", nullable=True)
         birthday = Column(dtype=DateTime, nullable=True, original_dtype=DateTime)
         age = Column(dtype=Integer, nullable=False, original_nullable=False)
-        gender = Column(dtype=String, category=["man", "woman"], nullable=False, original_category=["男", "女"])
+        gender = Column(
+            dtype=String,
+            category=["man", "woman"],
+            nullable=False,
+            original_category=["男", "女"],
+        )
         is_f1 = Column(dtype=Boolean, nullable=False)
         id_2 = Column(dtype=String, regexp=r"id_[0-9]{5}", nullable=True)
         gender_2 = Column(dtype=String, category=["man", "woman"], nullable=False)
@@ -180,7 +190,10 @@ def test_columns():
         "gender_2": False,
     }
     assert loader.is_nullable_columns(only_base=True) == {"age": False, "gender": False}
-    assert loader.is_datetime_columns(only_base=False) == {"birthday": True, "birthday_2": True}
+    assert loader.is_datetime_columns(only_base=False) == {
+        "birthday": True,
+        "birthday_2": True,
+    }
     assert loader.is_datetime_columns(only_base=True) == {"birthday": True}
     assert loader.regexp_columns(only_base=False) == {
         "id": {"regexp": r"id_[0-9]{5}", "nullable": True},

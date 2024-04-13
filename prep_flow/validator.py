@@ -160,7 +160,10 @@ class Validator:
                 match_obj = re.match(pattern=condition["regexp"], string=str(target))
                 if match_obj is None:
                     raise InvalidRegexpFoundError(
-                        column=column, row_number=i + 1, value=target, regexp=condition["regexp"]
+                        column=column,
+                        row_number=i + 1,
+                        value=target,
+                        regexp=condition["regexp"],
                     )
 
     @staticmethod
@@ -191,5 +194,8 @@ class Validator:
                 casted_target = target if isinstance(target, str) or pd.isna(target) else str(int(target))
                 if casted_target not in condition["category"]:
                     raise InvalidCategoryFoundError(
-                        column=column, row_number=i + 1, value=target, category=condition["category"]
+                        column=column,
+                        row_number=i + 1,
+                        value=target,
+                        category=condition["category"],
                     )

@@ -1,6 +1,5 @@
 from prep_flow.base_loader import BaseLoader
-from prep_flow.decorators import creator, modifier, data_filter
-from prep_flow.validator import Validator
+from prep_flow.decorators import creator, data_filter, modifier
 from prep_flow.errors import (
     ColumnCastError,
     InvalidCategoryFoundError,
@@ -9,11 +8,11 @@ from prep_flow.errors import (
     InvalidRegexpFoundError,
     NecessaryColumnsNotFoundError,
     NullValueFoundError,
+    ReferenceDataNotFoundError,
+    ReferenceDataNotInitializationError,
     SheetNotFoundError,
     UnnecessaryColumnsExistsError,
     ValueCastError,
-    ReferenceDataNotFoundError,
-    ReferenceDataNotInitializationError,
 )
 from prep_flow.expressions import (
     Boolean,
@@ -21,8 +20,7 @@ from prep_flow.expressions import (
     DateTime,
     Float,
     Integer,
-    String,
     ReferenceColumn,
+    String,
 )
-
-__version__ = '0.0.1'
+from prep_flow.validator import Validator

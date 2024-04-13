@@ -6,15 +6,15 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
-from prep_flow.decorators import CREATOR_KEY, DECORATOR_KEY, MODIFIER_KEY, FILTER_KEY
+from prep_flow.decorators import CREATOR_KEY, DECORATOR_KEY, FILTER_KEY, MODIFIER_KEY
 from prep_flow.errors import (
     ColumnCastError,
-    SheetNotFoundError,
-    ValueCastError,
     ReferenceDataNotFoundError,
     ReferenceDataNotInitializationError,
+    SheetNotFoundError,
+    ValueCastError,
 )
-from prep_flow.expressions import Column, Dtype, ReferenceColumn, DateTime
+from prep_flow.expressions import Column, DateTime, Dtype, ReferenceColumn
 from prep_flow.validator import CategoryCondition, RegexpCondition, Validator
 
 DEFAULT_SHEET_NAME = "Sheet1"
@@ -26,7 +26,9 @@ class BaseLoader(abc.ABC):
     __replace_none_to_nan__ = True
 
     def __init__(
-        self, data: Union[pd.DataFrame, pd.ExcelFile], reference_data: Optional[list[BaseLoader]] = None
+        self,
+        data: Union[pd.DataFrame, pd.ExcelFile],
+        reference_data: Optional[list[BaseLoader]] = None,
     ) -> None:
         self.original = self.parse_data(data)
         self.pre_data = None
@@ -222,7 +224,10 @@ class BaseLoader(abc.ABC):
     def original_regexp_columns(self) -> dict[str, RegexpCondition]:
         return dict(
             [
-                (key, {"regexp": val.original_regexp, "nullable": val.original_nullable})
+                (
+                    key,
+                    {"regexp": val.original_regexp, "nullable": val.original_nullable},
+                )
                 for key, val in self.definitions().items()
                 if (isinstance(val, Column))
                 and (val.original_regexp is not None)
@@ -294,7 +299,11 @@ class BaseLoader(abc.ABC):
                 self.data.loc[i, column] = dtype.cast(val)
             except Exception:
                 raise ValueCastError(
-                    column=column, row_number=i + 1, value=val, from_=self.data[column].dtype.name, to_=dtype.name
+                    column=column,
+                    row_number=i + 1,
+                    value=val,
+                    from_=self.data[column].dtype.name,
+                    to_=dtype.name,
                 )
 
     def cast_series(self, column: str, dtype: Dtype) -> None:
@@ -416,7 +425,12 @@ class BaseLoader(abc.ABC):
             if order != _order:
                 continue
             reference_data = [data for data in self.reference_data if data.__class__.__name__ == _class_name][0]
-            self.data = pd.merge(self.data, reference_data.data[list(_columns) + list(_on)], how=_how, on=_on)
+            self.data = pd.merge(
+                self.data,
+                reference_data.data[list(_columns) + list(_on)],
+                how=_how,
+                on=_on,
+            )
 
     def decorator_orders(self) -> list[int]:
         return list(set([val[2] for key, val in self.get_decorators().items()]))
