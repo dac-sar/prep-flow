@@ -1,0 +1,12 @@
+version: "3"
+services:
+  prep-flow-dev-env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/bash
+    environment:
+      - TZ=Asia/Tokyo
+    volumes:
+      - ./:/home/prep-flow
+    tty: true
