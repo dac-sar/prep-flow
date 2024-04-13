@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from prep_flow import (
-    BaseLoader,
+    BaseFlow,
     Boolean,
     Column,
     ColumnCastError,
@@ -26,7 +26,7 @@ from prep_flow import (
 )
 
 
-class UserLoader(BaseLoader):
+class UserFlow(BaseFlow):
     id = Column(dtype=String, regexp=r"id_[0-9]{1,3}")
     age = Column(dtype=Integer, nullable=False)
     name = Column(dtype=String)
@@ -55,42 +55,42 @@ def assert_dataframes(a: pd.DataFrame, b: pd.DataFrame) -> None:
 
 
 def test_parse_date():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         name = Column(dtype=String)
 
     df = pd.DataFrame({"name": ["taro", "hanako"]})
     xlsx = pd.ExcelFile("tests/data/test_parse_data.xlsx")
 
-    csv_loader = Loader(df)
-    xlsx_loader = Loader(xlsx)
+    csv_flow = Flow(df)
+    xlsx_flow = Flow(xlsx)
 
-    assert_dataframes(csv_loader.data, df)
-    assert_dataframes(xlsx_loader.data, df)
+    assert_dataframes(csv_flow.data, df)
+    assert_dataframes(xlsx_flow.data, df)
 
 
 def test_validate_sheet_name():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         __sheetname__ = "test_sheet"
 
         name = Column(dtype=String)
 
     answer = pd.DataFrame({"name": ["taro", "hanako"]})
     xlsx = pd.ExcelFile("tests/data/test_validate_sheet_name.xlsx")
-    xlsx_loader = Loader(xlsx)
-    assert_dataframes(xlsx_loader.data, answer)
+    xlsx_flow = Flow(xlsx)
+    assert_dataframes(xlsx_flow.data, answer)
 
 
 def test_definitions():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         name = Column(dtype=String)
         age = Column(dtype=Integer)
 
-    assert Loader.definitions()["name"].dtype.name == "str"
-    assert Loader.definitions()["age"].dtype.name == "int"
+    assert Flow.definitions()["name"].dtype.name == "str"
+    assert Flow.definitions()["age"].dtype.name == "int"
 
 
 def test_columns():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         id = Column(
             dtype=String,
             regexp=r"id_[0-9]{5}",
@@ -167,11 +167,11 @@ def test_columns():
             ],
         }
     )
-    loader = Loader(df)
+    flow = Flow(df)
 
-    assert_dataframes(loader.data, answer)
-    assert loader.additional_columns() == ["is_f1", "id_2", "gender_2", "birthday_2"]
-    assert loader.columns(only_base=False) == [
+    assert_dataframes(flow.data, answer)
+    assert flow.additional_columns() == ["is_f1", "id_2", "gender_2", "birthday_2"]
+    assert flow.columns(only_base=False) == [
         "id",
         "name",
         "birthday",
@@ -182,35 +182,35 @@ def test_columns():
         "gender_2",
         "birthday_2",
     ]
-    assert loader.columns(only_base=True) == ["id", "name", "birthday", "age", "gender"]
-    assert loader.is_nullable_columns(only_base=False) == {
+    assert flow.columns(only_base=True) == ["id", "name", "birthday", "age", "gender"]
+    assert flow.is_nullable_columns(only_base=False) == {
         "age": False,
         "gender": False,
         "is_f1": False,
         "gender_2": False,
     }
-    assert loader.is_nullable_columns(only_base=True) == {"age": False, "gender": False}
-    assert loader.is_datetime_columns(only_base=False) == {
+    assert flow.is_nullable_columns(only_base=True) == {"age": False, "gender": False}
+    assert flow.is_datetime_columns(only_base=False) == {
         "birthday": True,
         "birthday_2": True,
     }
-    assert loader.is_datetime_columns(only_base=True) == {"birthday": True}
-    assert loader.regexp_columns(only_base=False) == {
+    assert flow.is_datetime_columns(only_base=True) == {"birthday": True}
+    assert flow.regexp_columns(only_base=False) == {
         "id": {"regexp": r"id_[0-9]{5}", "nullable": True},
         "id_2": {"regexp": r"id_[0-9]{5}", "nullable": True},
     }
-    assert loader.regexp_columns(only_base=True) == {"id": {"regexp": r"id_[0-9]{5}", "nullable": True}}
-    assert loader.category_columns(only_base=False) == {
+    assert flow.regexp_columns(only_base=True) == {"id": {"regexp": r"id_[0-9]{5}", "nullable": True}}
+    assert flow.category_columns(only_base=False) == {
         "gender": {"category": ["man", "woman"], "nullable": False},
         "gender_2": {"category": ["man", "woman"], "nullable": False},
     }
-    assert loader.category_columns(only_base=True) == {"gender": {"category": ["man", "woman"], "nullable": False}}
-    assert loader.original_is_nullable_columns() == {"age": False}
-    assert loader.original_is_datetime_columns() == {"birthday": True}
-    assert loader.original_regexp_columns() == {"id": {"regexp": r"[0-9]{5}", "nullable": True}}
-    assert loader.original_category_columns() == {"gender": {"category": ["男", "女"], "nullable": False}}
-    assert loader.rename_dict() == {"氏名": "name"}
-    assert loader.dtype_dict() == {
+    assert flow.category_columns(only_base=True) == {"gender": {"category": ["man", "woman"], "nullable": False}}
+    assert flow.original_is_nullable_columns() == {"age": False}
+    assert flow.original_is_datetime_columns() == {"birthday": True}
+    assert flow.original_regexp_columns() == {"id": {"regexp": r"[0-9]{5}", "nullable": True}}
+    assert flow.original_category_columns() == {"gender": {"category": ["男", "女"], "nullable": False}}
+    assert flow.rename_dict() == {"氏名": "name"}
+    assert flow.dtype_dict() == {
         "id": String,
         "name": String,
         "birthday": DateTime,
@@ -221,22 +221,22 @@ def test_columns():
         "gender_2": String,
         "birthday_2": DateTime,
     }
-    assert loader.original_dtype_dict() == {"birthday": DateTime}
+    assert flow.original_dtype_dict() == {"birthday": DateTime}
 
 
 def test_cast_value():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         age = Column(dtype=Integer, nullable=True)
 
     df = pd.DataFrame({"age": ["28", "26", None, np.nan]})
-    loader = Loader(df)
-    data = loader.data
+    flow = Flow(df)
+    data = flow.data
 
     answer = pd.DataFrame({"age": [28, 26, np.nan, np.nan]})
     assert_dataframes(data, answer)
 
 
-def test_base_loader():
+def test_base_flow():
     original = pd.DataFrame(
         {
             "id": ["id_1", "id_2"],
@@ -257,8 +257,8 @@ def test_base_loader():
         }
     )
 
-    user_loader = UserLoader(original)
-    assert_dataframes(user_loader.data, answer)
+    user_flow = UserFlow(original)
+    assert_dataframes(user_flow.data, answer)
 
 
 def test_necessary_column_not_found():
@@ -272,7 +272,7 @@ def test_necessary_column_not_found():
     )
 
     with pytest.raises(NecessaryColumnsNotFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.columns == ["age"]
 
@@ -290,7 +290,7 @@ def test_unnecessary_column_exists():
     )
 
     with pytest.raises(UnnecessaryColumnsExistsError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.columns == ["postal_code"]
 
@@ -307,7 +307,7 @@ def test_nullable():
     )
 
     with pytest.raises(NullValueFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "age"
     assert pd.isna(e.value.value)
@@ -326,7 +326,7 @@ def test_is_datetime_1():
     )
 
     with pytest.raises(InvalidDateFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "birthday"
     assert e.value.value == "1995-10-40"
@@ -345,7 +345,7 @@ def test_is_datetime_2():
     )
 
     with pytest.raises(InvalidDateLiteralFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "birthday"
     assert e.value.value == "birthday"
@@ -364,7 +364,7 @@ def test_regexp():
     )
 
     with pytest.raises(InvalidRegexpFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "id"
     assert e.value.value == "1"
@@ -383,7 +383,7 @@ def test_category():
     )
 
     with pytest.raises(InvalidCategoryFoundError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "gender"
     assert e.value.value == "man"
@@ -402,7 +402,7 @@ def test_series_cast():
     )
 
     with pytest.raises(ColumnCastError) as e:
-        user_loader = UserLoader(data)  # noqa
+        user_flow = UserFlow(data)  # noqa
 
     assert e.value.column == "age"
     assert e.value.from_ == "object"
@@ -410,7 +410,7 @@ def test_series_cast():
 
 
 def test_filter():
-    class Loader(BaseLoader):
+    class Flow(BaseFlow):
         age = Column(dtype=Integer, nullable=True)
 
         @data_filter()
@@ -418,21 +418,21 @@ def test_filter():
             return data.query("age >= 20").reset_index(drop=True)
 
     df = pd.DataFrame({"age": [28, 26, 18, 30, 10]})
-    loader = Loader(df)
+    flow = Flow(df)
 
     answer = pd.DataFrame({"age": [28, 26, 30]})
-    assert_dataframes(loader.data, answer)
+    assert_dataframes(flow.data, answer)
 
 
 def test_reference_column():
-    class PrefectureLoader(BaseLoader):
+    class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
 
-    class MemberLoader(BaseLoader):
+    class MemberFlow(BaseFlow):
         name = Column(dtype=String)
         prefecture_code = Column(dtype=String)
-        prefecture_name = ReferenceColumn(column=PrefectureLoader.prefecture_name, how="left", on="prefecture_code")
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
 
     df_member = pd.DataFrame(
         {
@@ -454,21 +454,21 @@ def test_reference_column():
         }
     )
 
-    prefecture_loader = PrefectureLoader(df_prefecture)
-    member_loader = MemberLoader(df_member, reference_data=[prefecture_loader])
+    prefecture_flow = PrefectureFlow(df_prefecture)
+    member_flow = MemberFlow(df_member, reference=[prefecture_flow])
 
-    assert_dataframes(member_loader.data, answer)
+    assert_dataframes(member_flow.data, answer)
 
 
 def test_reference_data_with_error_1():
-    class PrefectureLoader(BaseLoader):
+    class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
 
-    class MemberLoader(BaseLoader):
+    class MemberFlow(BaseFlow):
         name = Column(dtype=String)
         prefecture_code = Column(dtype=String)
-        prefecture_name = ReferenceColumn(column=PrefectureLoader.prefecture_name, how="left", on="prefecture_code")
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
 
     df_member = pd.DataFrame(
         {
@@ -478,20 +478,20 @@ def test_reference_data_with_error_1():
     )
 
     with pytest.raises(ReferenceDataNotInitializationError) as e:
-        _ = MemberLoader(df_member)
+        _ = MemberFlow(df_member)
 
     assert e.value.name == "prefecture_name"
 
 
 def test_reference_data_with_error_2():
-    class PrefectureLoader(BaseLoader):
+    class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
 
-    class MemberLoader(BaseLoader):
+    class MemberFlow(BaseFlow):
         name = Column(dtype=String)
         prefecture_code = Column(dtype=String)
-        prefecture_name = ReferenceColumn(column=PrefectureLoader.prefecture_name, how="left", on="prefecture_code")
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
 
     df_member = pd.DataFrame(
         {
@@ -507,21 +507,21 @@ def test_reference_data_with_error_2():
     )
 
     with pytest.raises(ReferenceDataNotFoundError) as e:
-        _ = PrefectureLoader(df_prefecture)
-        _ = MemberLoader(df_member)
+        _ = PrefectureFlow(df_prefecture)
+        _ = MemberFlow(df_member)
 
-    assert e.value.name == "PrefectureLoader"
+    assert e.value.name == "PrefectureFlow"
 
 
 def test_order():
-    class PrefectureLoader(BaseLoader):
+    class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
 
-    class MemberLoader(BaseLoader):
+    class MemberFlow(BaseFlow):
         name = Column(dtype=String)
         prefecture_code = Column(dtype=String)
-        prefecture_name = ReferenceColumn(column=PrefectureLoader.prefecture_name, how="left", on="prefecture_code")
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
 
         @modifier("prefecture_name", order=1)
         def modify_prefecture_name(self, data: pd.DataFrame) -> pd.Series:
@@ -547,7 +547,7 @@ def test_order():
         }
     )
 
-    prefecture_loader = PrefectureLoader(df_prefecture)
-    member_loader = MemberLoader(df_member, reference_data=[prefecture_loader])
+    prefecture_flow = PrefectureFlow(df_prefecture)
+    member_flow = MemberFlow(df_member, reference=[prefecture_flow])
 
-    assert_dataframes(member_loader.data, answer)
+    assert_dataframes(member_flow.data, answer)

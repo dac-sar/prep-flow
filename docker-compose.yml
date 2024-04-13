@@ -10,3 +10,5 @@ services:
     volumes:
       - ./:/home/prep-flow
     tty: true
+    ports:
+      - "8888:8888"

@@ -1,4 +1,4 @@
-from prep_flow.base_loader import BaseLoader
+from prep_flow.base import BaseFlow
 from prep_flow.decorators import creator, data_filter, modifier
 from prep_flow.errors import (
     ColumnCastError,

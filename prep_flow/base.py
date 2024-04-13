@@ -21,19 +21,19 @@ DEFAULT_SHEET_NAME = "Sheet1"
 PYPREP_PARENT_CLASS_NAME = "__pyprep_parent_class_name__"
 
 
-class BaseLoader(abc.ABC):
+class BaseFlow(abc.ABC):
     __sheetname__ = DEFAULT_SHEET_NAME
     __replace_none_to_nan__ = True
 
     def __init__(
         self,
         data: Union[pd.DataFrame, pd.ExcelFile],
-        reference_data: Optional[list[BaseLoader]] = None,
+        reference: Optional[list[BaseFlow]] = None,
     ) -> None:
         self.original = self.parse_data(data)
         self.pre_data = None
         self.data = self.original.copy()
-        self.reference_data = [] if reference_data is None else reference_data
+        self.reference = [] if reference is None else reference
         self.validator = Validator()
 
         self.execute()
@@ -88,7 +88,7 @@ class BaseLoader(abc.ABC):
 
     def execute(self) -> None:
         # Argument Verification.
-        self.confirm_reference_data_exists()
+        self.confirm_reference_exists()
 
         # Add metadata.
         self.set_class_name_to_columns()
@@ -414,9 +414,9 @@ class BaseLoader(abc.ABC):
 
         return list(set(names))
 
-    def confirm_reference_data_exists(self) -> None:
+    def confirm_reference_exists(self) -> None:
         for _class_name, _, _, _, _ in self.get_reference_info():
-            if _class_name in [data.__class__.__name__ for data in self.reference_data]:
+            if _class_name in [data.__class__.__name__ for data in self.reference]:
                 continue
             raise ReferenceDataNotFoundError(name=_class_name)
 
@@ -424,7 +424,7 @@ class BaseLoader(abc.ABC):
         for _class_name, _columns, _how, _on, _order in self.get_reference_info():
             if order != _order:
                 continue
-            reference_data = [data for data in self.reference_data if data.__class__.__name__ == _class_name][0]
+            reference_data = [data for data in self.reference if data.__class__.__name__ == _class_name][0]
             self.data = pd.merge(
                 self.data,
                 reference_data.data[list(_columns) + list(_on)],
