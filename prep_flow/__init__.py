@@ -24,3 +24,5 @@ from prep_flow.expressions import (
     String,
     ReferenceColumn,
 )
+
+__version__ = '0.0.1'
