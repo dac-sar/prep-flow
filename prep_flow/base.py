@@ -357,7 +357,7 @@ class BaseFlow(abc.ABC):
             if self.get_num_of_args(attr) == 1:
                 self.data[_column] = getattr(self, attr)()
             else:
-                self.data[_column] = getattr(self, attr)(self.data)
+                self.data[_column] = getattr(self, attr)(self.data.copy())
 
     def apply_modifier(self, order: int) -> None:
         decorators = self.get_decorators(MODIFIER_KEY)
@@ -367,14 +367,14 @@ class BaseFlow(abc.ABC):
             if self.get_num_of_args(attr) == 1:
                 self.data[_column] = getattr(self, attr)()
             else:
-                self.data[_column] = getattr(self, attr)(self.data)
+                self.data[_column] = getattr(self, attr)(self.data.copy())
 
     def apply_filter(self, order: int) -> None:
         decorators = self.get_decorators(FILTER_KEY)
         for attr, (_, _, _order) in decorators.items():
             if order != _order:
                 continue
-            self.data = getattr(self, attr)(self.data)
+            self.data = getattr(self, attr)(self.data.copy())
 
     def sort_columns(self) -> None:
         self.data = self.data[self.columns()]
