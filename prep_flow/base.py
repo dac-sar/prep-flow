@@ -14,7 +14,7 @@ from prep_flow.errors import (
     SheetNotFoundError,
     ValueCastError,
 )
-from prep_flow.expressions import Column, DateTime, Dtype, ReferenceColumn
+from prep_flow.expressions import Column, DateTime, Dtype, ReferenceColumn, Integer, Float
 from prep_flow.validator import CategoryCondition, RegexpCondition, Validator
 
 DEFAULT_SHEET_NAME = "Sheet1"
@@ -359,7 +359,7 @@ class BaseFlow(abc.ABC):
             self.cast_value(column, dtype)
 
     def replace_none_to_nan(self) -> None:
-        self.data = self.data.replace({None: np.nan})
+        self.data = self.data.infer_objects(copy=False).replace({None: np.nan})
 
     @classmethod
     def get_num_of_args(cls, func_name: str) -> int:

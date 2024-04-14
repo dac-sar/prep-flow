@@ -226,15 +226,23 @@ def test_columns():
 
 def test_cast_value():
     class Flow(BaseFlow):
+        name = Column(dtype=String, nullable=True)
         age = Column(dtype=Integer, nullable=True)
 
-    df = pd.DataFrame({"age": ["28", "26", None, np.nan]})
+    df = pd.DataFrame({
+        "name": ["Taro", None, np.nan, "Hanako"],
+        "age": ["28", "26", None, np.nan],
+    })
     flow = Flow(df)
     data = flow.data
 
-    answer = pd.DataFrame({"age": [28, 26, np.nan, np.nan]})
+    answer = pd.DataFrame({
+        "name": ["Taro", np.nan, np.nan, "Hanako"],
+        "age": [28, 26, np.nan, np.nan]
+    })
     assert_dataframes(data, answer)
-
+    assert data["name"].dtype == "object"
+    assert data["age"].dtype == "float64"
 
 def test_base_flow():
     original = pd.DataFrame(
