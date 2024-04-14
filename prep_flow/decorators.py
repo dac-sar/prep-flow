@@ -6,7 +6,6 @@ MODIFIER_KEY = "__modifier__"
 FILTER_KEY = "__filter__"
 
 
-# TODO: ReferenceColumnに付与できないようにする
 def creator(column: str, order: int = 0) -> Callable:
     if column is None:
         raise Exception("creator with no column specified.")
