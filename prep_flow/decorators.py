@@ -21,7 +21,7 @@ def creator(column: str, use_reference: bool = False, order: int = 0) -> Callabl
     return dec
 
 
-def modifier(column: str,  order: int = 0) -> Callable:
+def modifier(column: str, order: int = 0) -> Callable:
     if column is None:
         raise Exception("modifier with no column specified.")
 

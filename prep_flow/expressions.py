@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Generic, Optional, Type, TypeVar, Union, Callable
+from typing import Annotated, Any, Callable, Generic, Optional, Type, TypeVar, Union
 
 import pandas as pd
 from pandas._libs.tslibs.timestamps import Timestamp  # noqa
@@ -117,7 +117,7 @@ class Column(BaseModel):
         original_category: Optional[list[str]] = None,
         modifier: Optional[Callable] = None,
         order: int = 0,
-        description: Optional[str] = None
+        description: Optional[str] = None,
     ):
 
         super().__init__(

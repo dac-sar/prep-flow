@@ -6,7 +6,7 @@ class SheetNotFoundError(Exception):
         self.sheet = sheet
 
     def __str__(self) -> str:
-        return f'There is no {self.sheet} sheet in excel file.'
+        return f"There is no {self.sheet} sheet in excel file."
 
 
 class ReferenceDataNotFoundError(Exception):
@@ -14,7 +14,7 @@ class ReferenceDataNotFoundError(Exception):
         self.name = name
 
     def __str__(self) -> str:
-        return f'The reference data, {self.name}, does not exist.'
+        return f"The reference data, {self.name}, does not exist."
 
 
 class ReferenceDataNotInitializationError(Exception):
@@ -22,7 +22,7 @@ class ReferenceDataNotInitializationError(Exception):
         self.name = name
 
     def __str__(self) -> str:
-        return f'The reference data, {self.name}, is not initialized.'
+        return f"The reference data, {self.name}, is not initialized."
 
 
 class DataColumnsError(Exception):
@@ -34,12 +34,12 @@ class NecessaryColumnsNotFoundError(DataColumnsError):
     pass
 
     def __str__(self) -> str:
-        return f'Necessary columns, {self.columns}, does not exist.'
+        return f"Necessary columns, {self.columns}, does not exist."
 
 
 class UnnecessaryColumnsExistsError(DataColumnsError):
     def __str__(self) -> str:
-        return f'Unnecessary columns, {self.columns}, exists.'
+        return f"Unnecessary columns, {self.columns}, exists."
 
 
 class DataColumnError(Exception):
@@ -54,7 +54,7 @@ class ColumnCastError(DataColumnError):
         self.to_ = to_
 
     def __str__(self) -> str:
-        return f'Does not cast from {self.from_} to {self.to_}. (column: {self.column})'
+        return f"Does not cast from {self.from_} to {self.to_}. (column: {self.column})"
 
 
 class DataValueError(Exception):
@@ -68,21 +68,23 @@ class NullValueFoundError(DataValueError):
     pass
 
     def __str__(self) -> str:
-        return f'NULL is contained in columns where NULL is not allowed. (column: {self.column}, value: {self.value}, row: {self.row_number})'  # noqa
+        return f"NULL is contained in columns where NULL is not allowed. (column: {self.column}, value: {self.value}, row: {self.row_number})"  # noqa
 
 
 class InvalidDateFoundError(DataValueError):
     pass
 
     def __str__(self) -> str:
-        return f'A non-existent date is specified. (column: {self.column}, value: {self.value}, row: {self.row_number})'
+        return (
+            f"A non-existent date is specified. (column: {self.column}, value: {self.value}, row: {self.row_number})"
+        )
 
 
 class InvalidDateLiteralFoundError(DataValueError):
     pass
 
     def __str__(self) -> str:
-        return f'Contains a string that cannot be recognized as a date. (column: {self.column}, value: {self.value}, row: {self.row_number})'  # noqa
+        return f"Contains a string that cannot be recognized as a date. (column: {self.column}, value: {self.value}, row: {self.row_number})"  # noqa
 
 
 class InvalidRegexpFoundError(DataValueError):
@@ -91,7 +93,7 @@ class InvalidRegexpFoundError(DataValueError):
         self.regexp = regexp
 
     def __str__(self) -> str:
-        return f'Contains a string that does not match the regular expression. (column: {self.column}, value: {self.value}, row: {self.row_number}, regexp: {self.regexp})'  # noqa
+        return f"Contains a string that does not match the regular expression. (column: {self.column}, value: {self.value}, row: {self.row_number}, regexp: {self.regexp})"  # noqa
 
 
 class InvalidCategoryFoundError(DataValueError):
@@ -100,7 +102,7 @@ class InvalidCategoryFoundError(DataValueError):
         self.category = category
 
     def __str__(self) -> str:
-        return f'Contains a string that is not included in the specified category.　(column: {self.column}, value: {self.value}, row: {self.row_number}, category: {self.category}'  # noqa
+        return f"Contains a string that is not included in the specified category.　(column: {self.column}, value: {self.value}, row: {self.row_number}, category: {self.category}"  # noqa
 
 
 class ValueCastError(DataValueError):
@@ -110,7 +112,7 @@ class ValueCastError(DataValueError):
         self.to_ = to_
 
     def __str__(self) -> str:
-        return f'Does not cast from {self.from_} to {self.to_}. (column: {self.column}, value: {self.value}, row: {self.row_number})'  # noqa
+        return f"Does not cast from {self.from_} to {self.to_}. (column: {self.column}, value: {self.value}, row: {self.row_number})"  # noqa
 
 
 class DecoratorError(Exception):
@@ -129,4 +131,3 @@ class DecoratorReturnTypeError(Exception):
 
     def __str__(self) -> str:
         return self.detail
-
