@@ -513,7 +513,7 @@ def test_reference_data_with_error_2():
     assert e.value.name == "PrefectureFlow"
 
 
-def test_order():
+def test_reference_column_with_modifier():
     class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
@@ -523,7 +523,7 @@ def test_order():
         prefecture_code = Column(dtype=String)
         prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
 
-        @modifier("prefecture_name", order=1)
+        @modifier("prefecture_name")
         def modify_prefecture_name(self, data: pd.DataFrame) -> pd.Series:
             return data["prefecture_name"].str.upper()
 
@@ -551,3 +551,72 @@ def test_order():
     member_flow = MemberFlow(df_member, reference=[prefecture_flow])
 
     assert_dataframes(member_flow.data, answer)
+
+def test_order():
+    class PrefectureFlow(BaseFlow):
+        prefecture_code = Column(dtype=String)
+        prefecture_name = Column(dtype=String)
+
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+        prefecture_code = Column(dtype=String)
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
+        prefecture_code_and_name = Column(dtype=String)
+
+        @creator("prefecture_code_and_name", order=1)
+        def create_prefecture_code_and_name(self, data: pd.DataFrame) -> pd.Series:
+            return data["prefecture_code"] + ": " + data["prefecture_name"]
+
+    df_member = pd.DataFrame(
+        {
+            "name": ["taro", "hanako", "jiro"],
+            "prefecture_code": ["001", "002", "002"],
+        }
+    )
+    df_prefecture = pd.DataFrame(
+        {
+            "prefecture_code": ["001", "002"],
+            "prefecture_name": ["TOKYO", "OSAKA"],
+        }
+    )
+    answer = pd.DataFrame(
+        {
+            "name": ["taro", "hanako", "jiro"],
+            "prefecture_code": ["001", "002", "002"],
+            "prefecture_name": ["TOKYO", "OSAKA", "OSAKA"],
+            "prefecture_code_and_name": ["001: TOKYO", "002: OSAKA", "002: OSAKA"]
+        }
+    )
+
+    prefecture_flow = PrefectureFlow(df_prefecture)
+    member_flow = MemberFlow(df_member, reference=[prefecture_flow])
+
+    assert_dataframes(member_flow.data, answer)
+
+def test_column_modifier():
+    class CountryFlow(BaseFlow):
+        country_code = Column(dtype=String)
+        country_name = Column(dtype=String)
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String, modifier=lambda x: x.lower())
+        country_code = Column(dtype=String)
+        country_name = ReferenceColumn(CountryFlow.country_name, how="left", on="country_code", modifier=lambda x: x.lower())
+
+    df_country = pd.DataFrame({
+        "country_code": ["JP", "US"],
+        "country_name": ["JAPAN", "AMERICA"]
+    })
+    df_member = pd.DataFrame({
+        "name": ["TARO", "JIRO", "HANAKO"],
+        "country_code": ["JP", "JP", "US"]
+    })
+    df_answer = pd.DataFrame({
+        "name": ["taro", "jiro", "hanako"],
+        "country_code":  ["JP", "JP", "US"],
+        "country_name": ["japan", "japan", "america"],
+    })
+
+    country = CountryFlow(df_country)
+    member = MemberFlow(df_member, reference=[country])
+
+    assert_dataframes(member.data, df_answer)

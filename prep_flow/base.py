@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 import numpy as np
 import pandas as pd
@@ -100,17 +100,26 @@ class BaseFlow(abc.ABC):
         self.pre_data = self.data.copy()
 
         for order in self.orders():
-            # Modify original columns and validate modified columns.
-            self.apply_modifier(order=order)
+            # Modify values with Column.modifier.
+            self.apply_column_modifier(order=order)
 
-            # Create user defined columns.
-            self.apply_creator(order=order)
+            # Modify values with decorator referring to Column.
+            self.apply_column_modifier_with_decorator(order=order)
+
+            # Create user defined columns with decorator.
+            self.apply_creator_with_decorator(order=order)
 
             # Filter data.
-            self.apply_filter(order=order)
+            self.apply_filter_with_decorator(order=order)
 
             # Merge Reference columns.
             self.merge(order=order)
+
+            # Modify values with ReferenceColumn.modifier.
+            self.apply_reference_column_modifier(order=order)
+
+            # Modify values with decorator referring to ReferenceColumn.
+            self.apply_reference_column_modifier_with_decorator(order=order)
 
         # Validate all columns.
         self.post_validate(only_base=False)
@@ -246,6 +255,28 @@ class BaseFlow(abc.ABC):
             ]
         )
 
+    def modifier_columns(self, order: int) -> dict[str, Callable]:
+        return dict(
+            [
+                (key, val.modifier)
+                for key, val in self.definitions().items()
+                if (not isinstance(val, ReferenceColumn))
+                and (val.order == order)
+                and (val.modifier is not None)
+            ]
+        )
+
+    def modifier_reference_columns(self, order: int) -> dict[str, Callable]:
+        return dict(
+            [
+                (key, val.modifier)
+                for key, val in self.definitions().items()
+                if (isinstance(val, ReferenceColumn))
+                and (val.order == order)
+                and (val.modifier is not None)
+            ]
+        )
+
     def rename_dict(self) -> dict:
         return dict(
             [
@@ -349,7 +380,17 @@ class BaseFlow(abc.ABC):
 
         return decorators
 
-    def apply_creator(self, order: int) -> None:
+    def apply_column_modifier(self, order: int) -> None:
+        modifier_columns = self.modifier_columns(order=order)
+        for column, modifier in modifier_columns.items():
+            self.data[column] = self.data[column].apply(modifier)
+
+    def apply_reference_column_modifier(self, order: int) -> None:
+        modifier_reference_columns = self.modifier_reference_columns(order=order)
+        for column, modifier in modifier_reference_columns.items():
+            self.data[column] = self.data[column].apply(modifier)
+
+    def apply_creator_with_decorator(self, order: int) -> None:
         decorators = self.get_decorators(CREATOR_KEY)
         for attr, (_, _column, _order) in decorators.items():
             if order != _order:
@@ -359,9 +400,11 @@ class BaseFlow(abc.ABC):
             else:
                 self.data[_column] = getattr(self, attr)(self.data.copy())
 
-    def apply_modifier(self, order: int) -> None:
+    def apply_column_modifier_with_decorator(self, order: int) -> None:
         decorators = self.get_decorators(MODIFIER_KEY)
         for attr, (_, _column, _order) in decorators.items():
+            if _column in self.reference_columns():
+                continue
             if order != _order:
                 continue
             if self.get_num_of_args(attr) == 1:
@@ -369,7 +412,19 @@ class BaseFlow(abc.ABC):
             else:
                 self.data[_column] = getattr(self, attr)(self.data.copy())
 
-    def apply_filter(self, order: int) -> None:
+    def apply_reference_column_modifier_with_decorator(self, order: int) -> None:
+        decorators = self.get_decorators(MODIFIER_KEY)
+        for attr, (_, _column, _order) in decorators.items():
+            if _column not in self.reference_columns():
+                continue
+            if order != _order:
+                continue
+            if self.get_num_of_args(attr) == 1:
+                self.data[_column] = getattr(self, attr)()
+            else:
+                self.data[_column] = getattr(self, attr)(self.data.copy())
+
+    def apply_filter_with_decorator(self, order: int) -> None:
         decorators = self.get_decorators(FILTER_KEY)
         for attr, (_, _, _order) in decorators.items():
             if order != _order:
@@ -435,8 +490,11 @@ class BaseFlow(abc.ABC):
     def decorator_orders(self) -> list[int]:
         return list(set([val[2] for key, val in self.get_decorators().items()]))
 
+    def column_orders(self) -> list[int]:
+        return list(set([self.column_info(column).order for column in self.columns(only_base=True)]))
+
     def reference_orders(self) -> list[int]:
         return list(set([self.column_info(column).order for column in self.reference_columns()]))
 
     def orders(self) -> list[int]:
-        return list(set(self.decorator_orders() + self.reference_orders()))
+        return list(set(self.decorator_orders() + self.column_orders() + self.reference_orders()))

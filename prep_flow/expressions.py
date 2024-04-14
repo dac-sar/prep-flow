@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Generic, Optional, Type, TypeVar, Union
+from typing import Annotated, Any, Generic, Optional, Type, TypeVar, Union, Callable
 
 import pandas as pd
 from pandas._libs.tslibs.timestamps import Timestamp  # noqa
@@ -100,6 +100,8 @@ class Column(BaseModel):
     original_nullable: bool = Field(default=True)
     original_regexp: Optional[str] = Field(default=None)
     original_category: Optional[list[str]] = Field(default=None)
+    modifier: Optional[Callable] = Field(default=None)
+    order: int = Field(default=0)
 
     def __init__(
         self,
@@ -112,6 +114,8 @@ class Column(BaseModel):
         original_nullable: Optional[bool] = True,
         original_regexp: Optional[str] = None,
         original_category: Optional[list[str]] = None,
+        modifier: Optional[Callable] = None,
+        order: int = 0,
     ):
 
         super().__init__(
@@ -127,6 +131,8 @@ class Column(BaseModel):
                     "original_nullable": original_nullable,
                     "original_regexp": original_regexp,
                     "original_category": original_category,
+                    "modifier": modifier,
+                    "order": order,
                 }.items()
                 if val is not None
             )
@@ -146,6 +152,8 @@ class Column(BaseModel):
             and self.original_nullable == other.original_nullable
             and self.original_regexp == other.original_regexp
             and self.original_category == other.original_category
+            and self.modifier == other.modifier
+            and self.order == other.order
         ):
             return False
 
@@ -163,6 +171,7 @@ class ReferenceColumn(BaseModel):
     nullable: bool = Field(default=True)
     regexp: Optional[str] = Field(default=None)
     category: Optional[list[str]] = Field(default=None)
+    modifier: Optional[Callable] = Field(default=None)
 
     def __init__(
         self,
@@ -174,6 +183,7 @@ class ReferenceColumn(BaseModel):
         nullable: Optional[bool] = True,
         regexp: Optional[str] = None,
         category: Optional[list[str]] = None,
+        modifier: Optional[Callable] = None,
     ):
 
         super().__init__(
@@ -188,6 +198,7 @@ class ReferenceColumn(BaseModel):
                     "nullable": nullable,
                     "regexp": regexp,
                     "category": category,
+                    "modifier": modifier,
                 }.items()
                 if val is not None
             )
@@ -213,6 +224,7 @@ class ReferenceColumn(BaseModel):
             and self.nullable == other.nullable
             and self.regexp == other.regexp
             and self.category == other.category
+            and self.modifier == other.modifier
         ):
             return False
 
