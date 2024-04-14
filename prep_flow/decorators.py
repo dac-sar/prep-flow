@@ -6,9 +6,12 @@ MODIFIER_KEY = "__modifier__"
 FILTER_KEY = "__filter__"
 
 
-def creator(column: str, order: int = 0) -> Callable:
+def creator(column: str, use_reference: bool = False, order: int = 0) -> Callable:
     if column is None:
         raise Exception("creator with no column specified.")
+
+    if use_reference:
+        order = 1
 
     def dec(f: Callable) -> classmethod:
         f_cls = classmethod(f)
@@ -18,7 +21,7 @@ def creator(column: str, order: int = 0) -> Callable:
     return dec
 
 
-def modifier(column: str, order: int = 0) -> Callable:
+def modifier(column: str,  order: int = 0) -> Callable:
     if column is None:
         raise Exception("modifier with no column specified.")
 
@@ -30,7 +33,10 @@ def modifier(column: str, order: int = 0) -> Callable:
     return dec
 
 
-def data_filter(order: int = 0) -> Callable:
+def data_filter(use_reference: bool = False, order: int = 0) -> Callable:
+    if use_reference:
+        order = 1
+
     def dec(f: Callable) -> classmethod:
         f_cls = f if isinstance(f, classmethod) else classmethod(f)
         setattr(f_cls, DECORATOR_KEY, (FILTER_KEY, None, order))

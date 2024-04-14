@@ -670,11 +670,11 @@ def test_order():
         prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code")
         prefecture_code_and_name = Column(dtype=String)
 
-        @creator("prefecture_code_and_name", order=1)
+        @creator("prefecture_code_and_name", use_reference=True)
         def create_prefecture_code_and_name(self, data: pd.DataFrame) -> pd.Series:
             return data["prefecture_code"] + ": " + data["prefecture_name"]
 
-        @data_filter(order=1)
+        @data_filter(use_reference=True)
         def filter_prefecture_name(self, data: pd.DataFrame) -> pd.DataFrame:
             return data.query('prefecture_name == "TOKYO"').reset_index(drop=True)
 
@@ -760,7 +760,7 @@ def test_decorator_with_error_2():
         country_code = Column(dtype=String)
         country_name = ReferenceColumn(CountryFlow.country_name, how="left", on="country_code")
 
-        @creator("country_name", order=1)
+        @creator("country_name", use_reference=True)
         def create_country_code_and_name(self, data: pd.DataFrame) -> pd.Series:
             return data["country_code"] + ": " + data["country_name"]
 
