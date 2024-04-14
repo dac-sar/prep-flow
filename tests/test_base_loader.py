@@ -432,7 +432,7 @@ def test_filter():
     assert_dataframes(flow.data, answer)
 
 
-def test_reference_column():
+def test_reference_column_1():
     class PrefectureFlow(BaseFlow):
         prefecture_code = Column(dtype=String)
         prefecture_name = Column(dtype=String)
@@ -520,6 +520,103 @@ def test_reference_data_with_error_2():
 
     assert e.value.name == "PrefectureFlow"
 
+
+def test_reference_data_with_error_3():
+    class PrefectureFlow(BaseFlow):
+        prefecture_code = Column(dtype=String)
+        prefecture_name = Column(dtype=String)
+
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+        prefecture_code = Column(dtype=String)
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code", nullable=False)
+
+    df_member = pd.DataFrame(
+        {
+            "name": ["taro", "hanako", "jiro"],
+            "prefecture_code": ["001", "002", "003"],
+        }
+    )
+    df_prefecture = pd.DataFrame(
+        {
+            "prefecture_code": ["001", "002"],
+            "prefecture_name": ["tokyo", "osaka"],
+        }
+    )
+
+    with pytest.raises(NullValueFoundError) as e:
+        prefecture = PrefectureFlow(df_prefecture)
+        _ = MemberFlow(df_member, reference=[prefecture])
+
+    assert e.value.column == "prefecture_name"
+    assert pd.isna(e.value.value)
+    assert e.value.row_number == 3
+
+
+def test_reference_data_with_error_4():
+    class PrefectureFlow(BaseFlow):
+        prefecture_code = Column(dtype=String)
+        prefecture_name = Column(dtype=String)
+
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+        prefecture_code = Column(dtype=String)
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code", regexp=r"^[A-Z]+$")
+
+    df_member = pd.DataFrame(
+        {
+            "name": ["taro", "hanako", "jiro"],
+            "prefecture_code": ["001", "002", "003"],
+        }
+    )
+    df_prefecture = pd.DataFrame(
+        {
+            "prefecture_code": ["001", "002"],
+            "prefecture_name": ["tokyo", "OSAKA"],
+        }
+    )
+
+    with pytest.raises(InvalidRegexpFoundError) as e:
+        prefecture = PrefectureFlow(df_prefecture)
+        _ = MemberFlow(df_member, reference=[prefecture])
+
+    assert e.value.column == "prefecture_name"
+    assert e.value.regexp == r"^[A-Z]+$"
+    assert e.value.value == "tokyo"
+    assert e.value.row_number == 1
+
+
+def test_reference_data_with_error_5():
+    class PrefectureFlow(BaseFlow):
+        prefecture_code = Column(dtype=String)
+        prefecture_name = Column(dtype=String)
+
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+        prefecture_code = Column(dtype=String)
+        prefecture_name = ReferenceColumn(column=PrefectureFlow.prefecture_name, how="left", on="prefecture_code", category=["tokyo", "osaka"])
+
+    df_member = pd.DataFrame(
+        {
+            "name": ["taro", "hanako", "jiro"],
+            "prefecture_code": ["001", "002", "003"],
+        }
+    )
+    df_prefecture = pd.DataFrame(
+        {
+            "prefecture_code": ["001", "002", "003"],
+            "prefecture_name": ["tokyo", "osaka", "nagoya"],
+        }
+    )
+
+    with pytest.raises(InvalidCategoryFoundError) as e:
+        prefecture = PrefectureFlow(df_prefecture)
+        _ = MemberFlow(df_member, reference=[prefecture])
+
+    assert e.value.column == "prefecture_name"
+    assert e.value.category == ["tokyo", "osaka"]
+    assert e.value.value == "nagoya"
+    assert e.value.row_number == 3
 
 def test_reference_column_with_modifier():
     class PrefectureFlow(BaseFlow):
