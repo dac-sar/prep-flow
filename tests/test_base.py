@@ -23,6 +23,8 @@ from prep_flow import (
     creator,
     data_filter,
     modifier,
+    DecoratorError,
+    DecoratorReturnTypeError,
 )
 
 
@@ -706,6 +708,7 @@ def test_column_modifier():
     class CountryFlow(BaseFlow):
         country_code = Column(dtype=String)
         country_name = Column(dtype=String)
+
     class MemberFlow(BaseFlow):
         name = Column(dtype=String, modifier=lambda x: x.lower())
         country_code = Column(dtype=String)
@@ -729,3 +732,65 @@ def test_column_modifier():
     member = MemberFlow(df_member, reference=[country])
 
     assert_dataframes(member.data, df_answer)
+
+
+def test_decorator_with_error_1():
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+
+        @modifier("age")
+        def modify_age(self, data: pd.DataFrame) -> pd.Series:
+            return data["age"] + 1
+
+    df_member = pd.DataFrame({"name": ["Taro", "Hanako"]})
+
+    with pytest.raises(DecoratorError) as e:
+        _ = MemberFlow(df_member)
+
+    assert e.value.column == "age"
+
+
+def test_decorator_with_error_2():
+    class CountryFlow(BaseFlow):
+        country_code = Column(dtype=String)
+        country_name = Column(dtype=String)
+
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String, modifier=lambda x: x.lower())
+        country_code = Column(dtype=String)
+        country_name = ReferenceColumn(CountryFlow.country_name, how="left", on="country_code")
+
+        @creator("country_name", order=1)
+        def create_country_code_and_name(self, data: pd.DataFrame) -> pd.Series:
+            return data["country_code"] + ": " + data["country_name"]
+
+    df_country = pd.DataFrame({
+        "country_code": ["JP", "US"],
+        "country_name": ["JAPAN", "AMERICA"]
+    })
+    df_member = pd.DataFrame({
+        "name": ["TARO", "JIRO", "HANAKO"],
+        "country_code": ["JP", "JP", "US"]
+    })
+
+    with pytest.raises(DecoratorError) as e:
+        country = CountryFlow(df_country)
+        _ = MemberFlow(df_member, reference=[country])
+
+        assert e.value.column == "country_name"
+
+
+def test_decorator_with_error_3():
+    class MemberFlow(BaseFlow):
+        name = Column(dtype=String)
+
+        @data_filter()
+        def filter_name(self, data: pd.DataFrame):
+            return data["name"] == "Taro"
+
+    df_member = pd.DataFrame({"name": ["Taro", "Hanako"]})
+
+    with pytest.raises(DecoratorReturnTypeError) as e:
+        _ = MemberFlow(df_member)
+
+    assert True

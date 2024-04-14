@@ -13,6 +13,8 @@ from prep_flow.errors import (
     ReferenceDataNotInitializationError,
     SheetNotFoundError,
     ValueCastError,
+    DecoratorError,
+    DecoratorReturnTypeError,
 )
 from prep_flow.expressions import Column, DateTime, Dtype, ReferenceColumn
 from prep_flow.validator import CategoryCondition, RegexpCondition, Validator
@@ -395,6 +397,11 @@ class BaseFlow(abc.ABC):
         for attr, (_, _column, _order) in decorators.items():
             if order != _order:
                 continue
+            if _column in self.reference_columns():
+                raise DecoratorError(
+                    column=_column,
+                    detail=f'Creator cannot specify reference-columns.(column: {_column})',
+                )
             if self.get_num_of_args(attr) == 1:
                 self.data[_column] = getattr(self, attr)()
             else:
@@ -407,6 +414,11 @@ class BaseFlow(abc.ABC):
                 continue
             if order != _order:
                 continue
+            if _column not in self.columns(only_base=True):
+                raise DecoratorError(
+                    column=_column,
+                    detail=f'You have specified a column name that does not exist.(column: {_column})',
+                )
             if self.get_num_of_args(attr) == 1:
                 self.data[_column] = getattr(self, attr)()
             else:
@@ -429,7 +441,13 @@ class BaseFlow(abc.ABC):
         for attr, (_, _, _order) in decorators.items():
             if order != _order:
                 continue
-            self.data = getattr(self, attr)(self.data.copy())
+            result = getattr(self, attr)(self.data.copy())
+            if not isinstance(result, pd.DataFrame):
+                raise DecoratorReturnTypeError(
+                    dtype=type(result),
+                    detail=f'Expected return type is pd.DataFrame, But you return f{type(result)}',
+                )
+            self.data = result
 
     def sort_columns(self) -> None:
         self.data = self.data[self.columns()]

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 
 # TODO: add __str__ function.
@@ -96,3 +96,22 @@ class ValueCastError(DataValueError):
         super().__init__(column, row_number, value)
         self.from_ = from_
         self.to_ = to_
+
+
+class DecoratorError(Exception):
+    def __init__(self, column: str, detail: Optional[str] = None) -> None:
+        self.column = column
+        self.detail = detail
+
+    def __str__(self) -> str:
+        return self.detail
+
+
+class DecoratorReturnTypeError(Exception):
+    def __init__(self, dtype: str, detail: Optional[str] = None) -> None:
+        self.dtype = dtype
+        self.detail = detail
+
+    def __str__(self) -> str:
+        return self.detail
+
