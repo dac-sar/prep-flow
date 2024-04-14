@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TypedDict
+from typing import TypedDict, Union
 
 import pandas as pd
 from pandas._libs.tslibs.parsing import DateParseError  # noqa
@@ -23,7 +23,7 @@ class RegexpCondition(TypedDict):
 
 
 class CategoryCondition(TypedDict):
-    category: list[str]
+    category: list[Union[str, int]]
     nullable: bool
 
 
@@ -191,8 +191,7 @@ class Validator:
             for i, target in enumerate(data[column]):
                 if condition["nullable"] and pd.isna(target):
                     continue
-                casted_target = target if isinstance(target, str) or pd.isna(target) else str(int(target))
-                if casted_target not in condition["category"]:
+                if target not in condition["category"]:
                     raise InvalidCategoryFoundError(
                         column=column,
                         row_number=i + 1,

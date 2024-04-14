@@ -189,3 +189,13 @@ def test_validate_category():
     conditions_3_2 = {"gender": {"category": ["man", "woman"], "nullable": True}}
     Validator.validate_category(data_3, conditions_3_2)
     assert True
+
+    data_4 = pd.DataFrame(
+        {
+            "name": ["taro", "hanako"],
+            "gender": [0, 1],
+        }
+    )
+    conditions_4 = {"gender": {"category": [0, 1], "nullable": False}}
+    Validator.validate_category(data_4, conditions_4)
+    assert True
