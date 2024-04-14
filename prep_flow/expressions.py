@@ -102,6 +102,7 @@ class Column(BaseModel):
     original_category: Optional[list[str]] = Field(default=None)
     modifier: Optional[Callable] = Field(default=None)
     order: int = Field(default=0)
+    description: Optional[str] = Field(default=None)
 
     def __init__(
         self,
@@ -116,6 +117,7 @@ class Column(BaseModel):
         original_category: Optional[list[str]] = None,
         modifier: Optional[Callable] = None,
         order: int = 0,
+        description: Optional[str] = None
     ):
 
         super().__init__(
@@ -133,6 +135,7 @@ class Column(BaseModel):
                     "original_category": original_category,
                     "modifier": modifier,
                     "order": order,
+                    "description": description,
                 }.items()
                 if val is not None
             )
@@ -154,6 +157,7 @@ class Column(BaseModel):
             and self.original_category == other.original_category
             and self.modifier == other.modifier
             and self.order == other.order
+            and self.description == other.description
         ):
             return False
 
@@ -172,6 +176,7 @@ class ReferenceColumn(BaseModel):
     regexp: Optional[str] = Field(default=None)
     category: Optional[list[str]] = Field(default=None)
     modifier: Optional[Callable] = Field(default=None)
+    description: Optional[str] = Field(default=None)
 
     def __init__(
         self,
@@ -184,6 +189,7 @@ class ReferenceColumn(BaseModel):
         regexp: Optional[str] = None,
         category: Optional[list[str]] = None,
         modifier: Optional[Callable] = None,
+        description: Optional[str] = None,
     ):
 
         super().__init__(
@@ -199,6 +205,7 @@ class ReferenceColumn(BaseModel):
                     "regexp": regexp,
                     "category": category,
                     "modifier": modifier,
+                    "description": description,
                 }.items()
                 if val is not None
             )
@@ -225,6 +232,7 @@ class ReferenceColumn(BaseModel):
             and self.regexp == other.regexp
             and self.category == other.category
             and self.modifier == other.modifier
+            and self.description == other.description
         ):
             return False
 
