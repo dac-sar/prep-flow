@@ -30,7 +30,7 @@ df_member = pd.DataFrame({
 })
 
 class MemberFlow(BaseFlow):
-    name = Column(dtype=String, name="name", description='Add "Mr." or "Ms." depending on the gender.')
+    name = Column(dtype=String, description='Add "Mr." or "Ms." depending on the gender.')
     gender = Column(dtype=String, category=["man", "woman"])
     birthday = Column(dtype=DateTime)
     age = Column(dtype=Integer)
