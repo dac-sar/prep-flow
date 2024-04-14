@@ -672,6 +672,10 @@ def test_order():
         def create_prefecture_code_and_name(self, data: pd.DataFrame) -> pd.Series:
             return data["prefecture_code"] + ": " + data["prefecture_name"]
 
+        @data_filter(order=1)
+        def filter_prefecture_name(self, data: pd.DataFrame) -> pd.DataFrame:
+            return data.query('prefecture_name == "TOKYO"').reset_index(drop=True)
+
     df_member = pd.DataFrame(
         {
             "name": ["taro", "hanako", "jiro"],
@@ -686,10 +690,10 @@ def test_order():
     )
     answer = pd.DataFrame(
         {
-            "name": ["taro", "hanako", "jiro"],
-            "prefecture_code": ["001", "002", "002"],
-            "prefecture_name": ["TOKYO", "OSAKA", "OSAKA"],
-            "prefecture_code_and_name": ["001: TOKYO", "002: OSAKA", "002: OSAKA"]
+            "name": ["taro"],
+            "prefecture_code": ["001"],
+            "prefecture_name": ["TOKYO"],
+            "prefecture_code_and_name": ["001: TOKYO"]
         }
     )
 
