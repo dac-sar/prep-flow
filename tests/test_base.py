@@ -776,20 +776,24 @@ def test_decorator_with_error_3():
 
     assert True
 
+
 def test_same_name():
     class Flow(BaseFlow):
         name_first = Column(dtype=String, name="name", modifier=lambda x: x.split(" ")[0])
         name_last = Column(dtype=String, name="name", modifier=lambda x: x.split(" ")[1])
 
     df = pd.DataFrame({"name": ["taro tanaka", "hanako sato"]})
-    answer = pd.DataFrame({
-        "name_first": ["taro", "hanako"],
-        "name_last": ["tanaka", "sato"],
-    })
+    answer = pd.DataFrame(
+        {
+            "name_first": ["taro", "hanako"],
+            "name_last": ["tanaka", "sato"],
+        }
+    )
 
     flow = Flow(df)
 
     assert_dataframes(flow.data, answer)
+
 
 def test_strict_mode():
     class Flow(BaseFlow):
@@ -802,14 +806,18 @@ def test_strict_mode():
         def create_name_age(self, data: pd.DataFrame) -> pd.Series:
             return data["name"] + "_" + data["age"].astype(str)
 
-    df = pd.DataFrame({
-        "name": ["taro tanaka", "hanako sato"],
-        "age": [26, 27],
-    })
-    answer = pd.DataFrame({
-        "name": ["taro tanaka", "hanako sato"],
-        "age": ["taro tanaka_26", "hanako sato_27"],
-    })
+    df = pd.DataFrame(
+        {
+            "name": ["taro tanaka", "hanako sato"],
+            "age": [26, 27],
+        }
+    )
+    answer = pd.DataFrame(
+        {
+            "name": ["taro tanaka", "hanako sato"],
+            "age": ["taro tanaka_26", "hanako sato_27"],
+        }
+    )
     flow = Flow(df)
 
     assert_dataframes(flow.data, answer)
