@@ -13,7 +13,6 @@ from prep_flow.errors import (
     ReferenceDataNotFoundError,
     ReferenceDataNotInitializationError,
     SheetNotFoundError,
-    UnnecessaryColumnsExistsError,
     ValueCastError,
 )
 from prep_flow.expressions import (

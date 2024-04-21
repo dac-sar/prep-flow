@@ -21,7 +21,6 @@ from prep_flow import (
     ReferenceDataNotFoundError,
     ReferenceDataNotInitializationError,
     String,
-    UnnecessaryColumnsExistsError,
     creator,
     data_filter,
     modifier,
@@ -211,7 +210,6 @@ def test_columns():
     assert flow.original_is_datetime_columns() == {"birthday": True}
     assert flow.original_regexp_columns() == {"id": {"regexp": r"[0-9]{5}", "nullable": True}}
     assert flow.original_category_columns() == {"gender": {"category": ["男", "女"], "nullable": False}}
-    assert flow.rename_dict() == {"氏名": "name"}
     assert flow.dtype_dict() == {
         "id": String,
         "name": String,
@@ -285,24 +283,6 @@ def test_necessary_column_not_found():
         user_flow = UserFlow(data)  # noqa
 
     assert e.value.columns == ["age"]
-
-
-def test_unnecessary_column_exists():
-    data = pd.DataFrame(
-        {
-            "id": ["id_1", "id_2"],
-            "name": ["tomohiko", "yui"],
-            "age": [28, 26],
-            "gender": ["男", "女"],
-            "birthday": ["1995-10-19", "1998-3-25"],
-            "postal_code": ["111-1111", "222-2222"],
-        }
-    )
-
-    with pytest.raises(UnnecessaryColumnsExistsError) as e:
-        user_flow = UserFlow(data)  # noqa
-
-    assert e.value.columns == ["postal_code"]
 
 
 def test_nullable():
@@ -795,3 +775,41 @@ def test_decorator_with_error_3():
         _ = MemberFlow(df_member)
 
     assert True
+
+def test_same_name():
+    class Flow(BaseFlow):
+        name_first = Column(dtype=String, name="name", modifier=lambda x: x.split(" ")[0])
+        name_last = Column(dtype=String, name="name", modifier=lambda x: x.split(" ")[1])
+
+    df = pd.DataFrame({"name": ["taro tanaka", "hanako sato"]})
+    answer = pd.DataFrame({
+        "name_first": ["taro", "hanako"],
+        "name_last": ["tanaka", "sato"],
+    })
+
+    flow = Flow(df)
+
+    assert_dataframes(flow.data, answer)
+
+def test_strict_mode():
+    class Flow(BaseFlow):
+        __strict_mode__ = False
+
+        name = Column(dtype=String)
+        name_age = Column(dtype=String)
+
+        @creator("name_age")
+        def create_name_age(self, data: pd.DataFrame) -> pd.Series:
+            return data["name"] + "_" + data["age"].astype(str)
+
+    df = pd.DataFrame({
+        "name": ["taro tanaka", "hanako sato"],
+        "age": [26, 27],
+    })
+    answer = pd.DataFrame({
+        "name": ["taro tanaka", "hanako sato"],
+        "age": ["taro tanaka_26", "hanako sato_27"],
+    })
+    flow = Flow(df)
+
+    assert_dataframes(flow.data, answer)

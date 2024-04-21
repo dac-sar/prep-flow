@@ -8,7 +8,6 @@ from prep_flow import (
     InvalidRegexpFoundError,
     NecessaryColumnsNotFoundError,
     NullValueFoundError,
-    UnnecessaryColumnsExistsError,
     Validator,
 )
 
@@ -29,26 +28,6 @@ def test_validate_necessary_columns():
     with pytest.raises(NecessaryColumnsNotFoundError) as e:
         Validator.validate_necessary_columns(data, necessary_columns_2)
     assert e.value.columns == ["gender", "height"]
-
-
-def test_validate_unnecessary_columns():
-    data = pd.DataFrame(
-        {
-            "name": ["taro", "hanako"],
-            "age": [28, 26],
-            "gender": ["man", "woman"],
-            "height": [178, 162],
-        }
-    )
-    necessary_columns_1 = ["name", "age"]
-    with pytest.raises(UnnecessaryColumnsExistsError) as e:
-        Validator.validate_unnecessary_columns(data, necessary_columns_1)
-    assert e.value.columns == ["gender", "height"]
-
-    necessary_columns_2 = ["name", "age", "gender"]
-    with pytest.raises(UnnecessaryColumnsExistsError) as e:
-        Validator.validate_unnecessary_columns(data, necessary_columns_2)
-    assert e.value.columns == ["height"]
 
 
 def test_validate_nullable():

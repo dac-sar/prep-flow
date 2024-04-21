@@ -13,7 +13,6 @@ from prep_flow.errors import (
     InvalidRegexpFoundError,
     NecessaryColumnsNotFoundError,
     NullValueFoundError,
-    UnnecessaryColumnsExistsError,
 )
 
 
@@ -48,27 +47,6 @@ class Validator:
                 results.append(column)
         if len(results) > 0:
             raise NecessaryColumnsNotFoundError(columns=results)
-
-    @staticmethod
-    def validate_unnecessary_columns(data: pd.DataFrame, necessary_columns: list[str]) -> None:
-        """
-        Raise an error, if the data have unnecessary columns that necessary_columns don't contain.
-
-        Parameters
-        ----------
-        data: pd.DataFrame
-        necessary_columns: list[str]
-
-        Raises
-        ------
-        UnnecessaryColumnsExistsError
-        """
-        results = []
-        for column in data.columns:
-            if column not in necessary_columns:
-                results.append(column)
-        if len(results) > 0:
-            raise UnnecessaryColumnsExistsError(columns=results)
 
     @staticmethod
     def validate_nullable(data: pd.DataFrame, conditions: dict[str, bool]) -> None:

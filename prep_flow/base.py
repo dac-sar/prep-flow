@@ -26,6 +26,7 @@ PYPREP_PARENT_CLASS_NAME = "__pyprep_parent_class_name__"
 class BaseFlow(abc.ABC):
     __sheetname__ = DEFAULT_SHEET_NAME
     __replace_none_to_nan__ = True
+    __strict_mode__ = True
 
     def __init__(
         self,
@@ -275,15 +276,6 @@ class BaseFlow(abc.ABC):
             ]
         )
 
-    def rename_dict(self) -> dict:
-        return dict(
-            [
-                (val.name, key)
-                for key, val in self.definitions().items()
-                if (isinstance(val, Column)) and (val.name is not None)
-            ]
-        )
-
     def dtype_dict(self) -> dict[str, Dtype]:
         return dict([(key, val.dtype) for key, val in self.definitions().items() if val.dtype is not None])
 
@@ -300,11 +292,26 @@ class BaseFlow(abc.ABC):
 
     def rename(self) -> None:
         self.data.columns = [str(col) for col in self.data.columns]
-        self.data = self.data.rename(columns=self.rename_dict())
+
+        renamed_data = pd.DataFrame()
+        for column_name in self.columns(only_base=True):
+            column_info = self.column_info(column_name)
+            if column_info.name is None:
+                if column_name in self.data.columns:
+                    renamed_data[column_name] = self.data[column_name]
+            else:
+                if column_info.name in self.data.columns:
+                    renamed_data[column_name] = self.data[column_info.name]
+
+        if not self.__strict_mode__:
+            for column_name in self.data:
+                if column_name not in renamed_data.columns:
+                    renamed_data[column_name] = self.data[column_name]
+
+        self.data = renamed_data.copy()
 
     def pre_validate(self) -> None:
         self.validator.validate_necessary_columns(self.data, self.columns(only_base=True))
-        self.validator.validate_unnecessary_columns(self.data, self.columns(only_base=True))
         self.validator.validate_nullable(self.data, self.original_is_nullable_columns())
         self.validator.validate_datetime(self.data, self.original_is_datetime_columns())
         self.validator.validate_regexp(self.data, self.original_regexp_columns())
@@ -312,7 +319,6 @@ class BaseFlow(abc.ABC):
 
     def post_validate(self, only_base: bool = False) -> None:
         self.validator.validate_necessary_columns(self.data, self.columns(only_base))
-        self.validator.validate_unnecessary_columns(self.data, self.columns(only_base))
         self.validator.validate_nullable(self.data, self.is_nullable_columns(only_base))
         self.validator.validate_datetime(self.data, self.is_datetime_columns(only_base))
         self.validator.validate_regexp(self.data, self.regexp_columns(only_base))
